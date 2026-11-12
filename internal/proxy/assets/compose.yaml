@@ -1,0 +1,22 @@
+# Managed by lazydomain. Rewritten on every `lazydomain proxy up`; local edits are lost.
+#
+# network_mode: host lets Caddy reach 127.0.0.1:<APP_PORT> and lets Windows
+# reach Caddy on 127.0.0.1:443 through WSL localhost forwarding.
+# --resume restores the last config pushed through the admin API after a restart.
+name: lazydomain
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: lazydomain-caddy
+    restart: unless-stopped
+    network_mode: host
+    command: ["caddy", "run", "--resume"]
+    volumes:
+      # Holds the local CA; deleting it means trusting a new CA again.
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

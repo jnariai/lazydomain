@@ -1,0 +1,52 @@
+version: 2
+
+project_name: lazydomain
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: lazydomain
+    main: ./cmd/lazydomain
+    binary: lazydomain
+    env:
+      - CGO_ENABLED=0
+    goos: [linux]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - formats: [tar.gz]
+    # install.sh depends on this name and on checksums.txt below.
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+release:
+  # Must match the repo hardcoded in install.sh.
+  github:
+    owner: jnariai
+    name: lazydomain
+  footer: |
+    Install or upgrade:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/jnariai/lazydomain/main/install.sh | sh
+    ```
