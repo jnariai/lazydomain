@@ -215,7 +215,7 @@ func executablePath() (string, error) {
 		return "", err
 	}
 	if strings.Contains(p, string(filepath.Separator)+"go-build") {
-		return "", fmt.Errorf("running from a temporary go build (%s); nothing to remove", p)
+		return "", fmt.Errorf("running from a temporary go build (%s); install lazydomain first", p)
 	}
 	return p, nil
 }

@@ -1,8 +1,10 @@
 package proxy
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"testing"
+	"time"
 )
 
 func decode(t *testing.T, b []byte) map[string]any {
@@ -56,5 +58,40 @@ func TestBuildConfigRoutes(t *testing.T) {
 	pol := apps["tls"].(map[string]any)["automation"].(map[string]any)["policies"].([]any)[0].(map[string]any)
 	if n := len(pol["subjects"].([]any)); n != 2 {
 		t.Errorf("tls subjects = %d, want 2", n)
+	}
+}
+
+// Short lifetimes expire while WSL2 is paused by Windows sleep.
+func TestBuildConfigCertLifetimes(t *testing.T) {
+	b, err := BuildConfig([]Route{{Host: "a.test", Upstream: "127.0.0.1:8080"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	apps := decode(t, b)["apps"].(map[string]any)
+
+	ca := apps["pki"].(map[string]any)["certificate_authorities"].(map[string]any)["local"].(map[string]any)
+	if ca["intermediate_lifetime"] != IntermediateLifetime.String() {
+		t.Errorf("intermediate_lifetime = %v", ca["intermediate_lifetime"])
+	}
+	pol := apps["tls"].(map[string]any)["automation"].(map[string]any)["policies"].([]any)[0].(map[string]any)
+	iss := pol["issuers"].([]any)[0].(map[string]any)
+	if iss["lifetime"] != LeafLifetime.String() {
+		t.Errorf("leaf lifetime = %v", iss["lifetime"])
+	}
+}
+
+func TestIntermediateTooShort(t *testing.T) {
+	now := time.Now()
+	for _, tc := range []struct {
+		lifetime time.Duration
+		want     bool
+	}{
+		{7 * 24 * time.Hour, true}, // Caddy's default
+		{IntermediateLifetime, false},
+	} {
+		cert := &x509.Certificate{NotBefore: now, NotAfter: now.Add(tc.lifetime)}
+		if got := IntermediateTooShort(cert); got != tc.want {
+			t.Errorf("lifetime %v: got %v, want %v", tc.lifetime, got, tc.want)
+		}
 	}
 }

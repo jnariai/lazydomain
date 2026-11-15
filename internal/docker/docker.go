@@ -52,3 +52,13 @@ func Compose(ctx context.Context, file string, args ...string) error {
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	return cmd.Run()
 }
+
+func Exec(ctx context.Context, container string, args ...string) error {
+	_, err := run(ctx, append([]string{"exec", container}, args...)...)
+	return err
+}
+
+func Restart(ctx context.Context, container string) error {
+	_, err := run(ctx, "restart", container)
+	return err
+}
