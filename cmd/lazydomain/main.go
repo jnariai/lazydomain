@@ -12,6 +12,7 @@ import (
 
 	"github.com/jnariai/lazydomain/internal/doctor"
 	"github.com/jnariai/lazydomain/internal/proxy"
+	"github.com/jnariai/lazydomain/internal/state"
 	"github.com/jnariai/lazydomain/internal/tui"
 )
 
@@ -96,7 +97,10 @@ func runProxy(ctx context.Context, args []string) int {
 	var err error
 	switch args[0] {
 	case "up":
-		err = proxy.Up(ctx)
+		var st *state.State
+		if st, err = state.Load(); err == nil {
+			err = proxy.Up(ctx, st.Routes())
+		}
 	case "down":
 		err = proxy.Down(ctx)
 	default:

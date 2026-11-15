@@ -3,6 +3,7 @@ package proxy
 import (
 	"encoding/json"
 	"sort"
+	"time"
 )
 
 type Route struct {
@@ -12,6 +13,17 @@ type Route struct {
 
 const CAName = "lazydomain Local CA"
 
+// Caddy's defaults (12h leaves, 7d intermediate) assume a server that never
+// sleeps. Under WSL2 the VM is paused while Windows sleeps, Caddy's renewal
+// timer stops with it, and after resume the browser gets a certificate that
+// expired during the night (ERR_CERT_DATE_INVALID). Long lifetimes keep the
+// renewal window (last third of the lifetime) far wider than any sleep.
+// Leaves chained to a user-installed root are exempt from the 398-day limit.
+const (
+	IntermediateLifetime = 365 * 24 * time.Hour
+	LeafLifetime         = 30 * 24 * time.Hour // renewed ~10 days before expiry
+)
+
 // pki is always present so Caddy generates the root CA before any domain
 // exists. http is only added with routes, since it makes Caddy bind :443/:80.
 func BuildConfig(routes []Route) ([]byte, error) {
@@ -19,8 +31,9 @@ func BuildConfig(routes []Route) ([]byte, error) {
 		"pki": map[string]any{
 			"certificate_authorities": map[string]any{
 				"local": map[string]any{
-					"name":          CAName,
-					"install_trust": false,
+					"name":                  CAName,
+					"install_trust":         false,
+					"intermediate_lifetime": IntermediateLifetime.String(),
 				},
 			},
 		},
@@ -56,7 +69,11 @@ func BuildConfig(routes []Route) ([]byte, error) {
 			"automation": map[string]any{
 				"policies": []any{map[string]any{
 					"subjects": hosts,
-					"issuers":  []any{map[string]any{"module": "internal", "ca": "local"}},
+					"issuers": []any{map[string]any{
+						"module":   "internal",
+						"ca":       "local",
+						"lifetime": LeafLifetime.String(),
+					}},
 				}},
 			},
 		}
