@@ -40,7 +40,7 @@ curl -fsSL https://raw.githubusercontent.com/jnariai/lazydomain/main/install.sh 
 
 The script downloads the latest release, verifies it against the release's
 `checksums.txt`, and installs `lazydomain` to `~/.local/bin`. It never uses
-sudo. Run the same command again to upgrade. Options:
+sudo. Options:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/jnariai/lazydomain/main/install.sh | LAZYDOMAIN_VERSION=v0.1.0 sh
@@ -53,6 +53,18 @@ Other ways to install:
 go install github.com/jnariai/lazydomain/cmd/lazydomain@latest   # Go 1.24+
 make install                                                     # from a clone, to ~/.local/bin
 ```
+
+### Update
+
+```bash
+lazydomain update            # latest release
+lazydomain update v0.2.0     # a specific version (also works to downgrade)
+```
+
+It downloads the release, verifies it against `checksums.txt`, replaces the
+binary in place and, if the proxy is running, runs `lazydomain proxy up` with
+the new version so proxy changes take effect. Re-running the install one-liner
+also upgrades, but does not refresh the proxy.
 
 ### Uninstall
 

@@ -33,6 +33,7 @@ Usage:
   lazydomain proxy up              start the shared Caddy proxy (idempotent)
   lazydomain proxy down            stop the proxy (keeps the CA and routes)
   lazydomain trust                 trust the proxy's root CA in Windows and WSL
+  lazydomain update [version]      update to the latest release (or the given one)
   lazydomain uninstall [--yes]     remove hosts entries, certificates, proxy, config and the binary
   lazydomain version
 
@@ -75,6 +76,8 @@ func run(ctx context.Context, args []string) int {
 		return runAdd(ctx, args[1:])
 	case "remove", "rm":
 		return runRemove(ctx, args[1:])
+	case "update", "upgrade":
+		return runUpdate(ctx, args[1:])
 	case "uninstall":
 		return runUninstall(ctx, args[1:])
 	case "version", "--version":

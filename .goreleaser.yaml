@@ -45,7 +45,9 @@ release:
     owner: jnariai
     name: lazydomain
   footer: |
-    Install or upgrade:
+    Already installed? Run `lazydomain update`.
+
+    New install:
 
     ```bash
     curl -fsSL https://raw.githubusercontent.com/jnariai/lazydomain/main/install.sh | sh
